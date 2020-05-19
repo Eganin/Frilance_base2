@@ -2,7 +2,8 @@ import bs4
 import requests
 import time
 from selenium import webdriver
-import urllib
+import os
+import os.path
 
 
 YANDEX_IMAGES = 'https://yandex.ru/images/search?from=tabbar&text={}' # слова разделяются %20
@@ -27,13 +28,14 @@ class ParseImage(object):
         self.item = item
         self.list_href = []
         self.selection = ('a.serp-item__link',
-                          'img.rg_i.Q4LuWd.tx8vtf',
-                          'img.mimg')
+                          'img')
 
         self.href_selection =('href',
                               'src')
 
         self.new_dop_href = ('https://yandex.ru/')
+        self.cnt = 0
+        self.file_path = 'Download_images'
 
     def parametrization(self):
         self.href = self.href.format(self.parse_name())
@@ -85,27 +87,48 @@ class ParseImage(object):
             self.work(self.selection[0], self.href_selection[0])
 
         elif flag =='bing' :
-            self.work(self.selection[2] , self.href_selection[1])
+            self.work(self.selection[1] , self.href_selection[1])
 
     def work(self , selection , href_image):
-        print(selection)
         print(self.get_url().url)
         soup = bs4.BeautifulSoup(self.get_url().content, 'lxml')
         images = soup.select(selection)
-        print(images)
         for href in images:
-            print(href[href_image])
-            self.list_href.append(href[href_image])
+            try:
+                if self.user_browser == 'yandex':
+                    print(self.new_dop_href+str(href[href_image]))
+                    self.list_href.append(self.new_dop_href+str(href[href_image]))
+
+                else:
+                    print(href[href_image])
+                    self.list_href.append(href[href_image])
+
+            except :
+                pass
 
     def download_page(self):
         for href in self.list_href:
-            resource = urllib.urlopen(href)
-            out = open("...\img.jpg", 'wb')
-            out.write(resource.read())
-            out.close()
+            try :
+                p = requests.get(href)
+                out = open("Download_images/test"+str(self.cnt)+".img", "wb")
+                self.cnt+=1
+                out.write(p.content)
+                out.close()
+                print('complete')
+
+            except :
+                print('file not is download')
+                pass
 
     def scrolling_web_page(self):
         pass
+
+    def create_directory(self):
+        if os.path.exists(self.file_path) :
+            pass
+
+        else :
+            os.mkdir(self.file_path)
 
 
 if __name__ == '__main__':
@@ -115,6 +138,8 @@ if __name__ == '__main__':
     clf.choice_browser()
     clf.parametrization()
     clf.parser(clf.user_browser)
+    clf.create_directory()
+    clf.download_page()
 
 
 
