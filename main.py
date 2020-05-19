@@ -1,7 +1,5 @@
 import bs4
 import requests
-import time
-from selenium import webdriver
 import os
 import os.path
 
